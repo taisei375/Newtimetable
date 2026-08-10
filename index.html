@@ -1,699 +1,1858 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時間割</title>
 
-    <!-- スマホ対応 -->
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<style>
+* {
+    box-sizing: border-box;
+}
 
-    <title>時間割・カレンダー</title>
+body {
+    margin: 0;
+    font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Helvetica Neue",
+        "Hiragino Kaku Gothic ProN",
+        "Yu Gothic",
+        sans-serif;
+    background: #f5f6f8;
+    color: #222;
+}
 
-    <!-- CSS -->
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
+/* =========================
+   ヘッダー
+========================= */
+
+header {
+    background: white;
+    border-bottom: 1px solid #ddd;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+h1 {
+    margin: 0 10px 0 0;
+    font-size: 21px;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 13px;
+    cursor: pointer;
+}
+
+.primary {
+    background: #222;
+    color: white;
+}
+
+.secondary {
+    background: #e9eaed;
+    color: #222;
+}
+
+.danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.schedule-select {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: white;
+    max-width: 190px;
+}
+
+/* =========================
+   メイン
+========================= */
+
+main {
+    max-width: 1200px;
+    margin: 18px auto;
+    padding: 0 12px;
+}
+
+.info {
+    background: white;
+    border-radius: 12px;
+    padding: 13px 16px;
+    margin-bottom: 15px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.schedule-title {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.total-credit {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+/* =========================
+   時間割
+========================= */
+
+.table-wrapper {
+    background: white;
+    border-radius: 14px;
+    overflow-x: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.timetable {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.timetable th,
+.timetable td {
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.timetable th {
+    height: 45px;
+    background: #f0f1f3;
+    font-weight: bold;
+}
+
+.period {
+    width: 70px;
+    background: #fafafa;
+    font-weight: bold;
+}
+
+.timetable td {
+    height: 100px;
+    padding: 4px;
+}
+
+/* 空きコマ */
+
+.empty-slot {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #aaa;
+    font-size: 22px;
+    cursor: pointer;
+    border-radius: 9px;
+}
+
+.empty-slot:hover {
+    background: #f3f3f3;
+}
+
+/* 授業 */
+
+.class-card {
+    width: 100%;
+    height: 100%;
+
+    border-radius: 10px;
+    padding: 7px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    transition: 0.12s;
+}
+
+.class-card:hover {
+    transform: scale(1.02);
+    filter: brightness(0.97);
+}
+
+.class-name {
+    font-weight: bold;
+    font-size: 14px;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.teacher {
+    font-size: 11px;
+    margin-top: 4px;
+    opacity: 0.7;
+}
+
+.credit {
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* =========================
+   6色
+========================= */
+
+.color-1 {
+    background: #ffd6d6;
+}
+
+.color-2 {
+    background: #ffe8b6;
+}
+
+.color-3 {
+    background: #fff5a8;
+}
+
+.color-4 {
+    background: #cfeccf;
+}
+
+.color-5 {
+    background: #cfe5ff;
+}
+
+.color-6 {
+    background: #e2d2ff;
+}
+
+/* =========================
+   モーダル
+========================= */
+
+.modal-bg {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0,0,0,0.45);
+
+    z-index: 100;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 15px;
+}
+
+.modal-bg.active {
+    display: flex;
+}
+
+.modal {
+    width: 100%;
+    max-width: 520px;
+
+    background: white;
+    border-radius: 16px;
+
+    padding: 22px;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal h2 {
+    margin: 0 0 18px;
+    font-size: 20px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 7px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* =========================
+   曜日・時限選択
+========================= */
+
+.slot-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+}
+
+.slot {
+    padding: 8px 3px;
+
+    border: 1px solid #ccc;
+    border-radius: 8px;
+
+    background: #fafafa;
+
+    text-align: center;
+    cursor: pointer;
+
+    user-select: none;
+}
+
+.slot:hover {
+    background: #eee;
+}
+
+.slot.selected {
+    background: #222;
+    color: white;
+    border-color: #222;
+}
+
+.slot-day {
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.slot-period {
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.selected-count {
+    margin-top: 8px;
+    color: #666;
+    font-size: 13px;
+}
+
+/* =========================
+   色選択
+========================= */
+
+.color-options {
+    display: flex;
+    gap: 9px;
+}
+
+.color-option {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 50%;
+
+    border: 3px solid transparent;
+
+    cursor: pointer;
+}
+
+.color-option.selected {
+    border-color: #222;
+}
+
+/* =========================
+   モーダルボタン
+========================= */
+
+.modal-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    flex: 1;
+}
+
+/* =========================
+   スマホ
+========================= */
+
+@media (max-width: 700px) {
+
+    header {
+        padding: 10px;
+    }
+
+    h1 {
+        width: 100%;
+        font-size: 19px;
+    }
+
+    .schedule-select {
+        flex: 1;
+        max-width: none;
+    }
+
+    .timetable {
+        min-width: 680px;
+    }
+
+    .timetable td {
+        height: 90px;
+    }
+
+    .class-name {
+        font-size: 12px;
+    }
+
+    .slot-grid {
+        gap: 4px;
+    }
+
+    .slot {
+        padding: 7px 2px;
+    }
+}
+</style>
 </head>
-
 
 <body>
 
-<!-- ==================================================
-     ヘッダー
-================================================== -->
+<header>
 
-<header class="app-header">
+<div class="header-inner">
 
-    <div class="header-inner">
+    <h1>📚 時間割</h1>
 
-        <h1>
-            📚 時間割
-        </h1>
+    <select
+        id="scheduleSelect"
+        class="schedule-select"
+    ></select>
 
-        <!-- 時間割切り替え -->
-        <select
-            id="scheduleSelect"
-            class="schedule-select"
-        >
-        </select>
+    <!-- 授業を複数コマに登録 -->
+    <button
+        class="primary"
+        onclick="openAddModal()"
+    >
+        ＋ 授業を追加
+    </button>
 
+    <!-- 時間割を複数作成 -->
+    <button
+        class="secondary"
+        onclick="addSchedule()"
+    >
+        ＋ 時間割
+    </button>
 
-        <!-- 授業追加 -->
-        <button
-            id="addClassButton"
-            class="primary-button"
-        >
-            ＋ 授業を追加
-        </button>
+    <button
+        class="secondary"
+        onclick="renameSchedule()"
+    >
+        名前変更
+    </button>
 
+    <button
+        class="danger"
+        onclick="deleteSchedule()"
+    >
+        削除
+    </button>
 
-        <!-- 時間割追加 -->
-        <button
-            id="addScheduleButton"
-            class="secondary-button"
-        >
-            ＋ 時間割
-        </button>
-
-
-        <!-- 名前変更 -->
-        <button
-            id="renameScheduleButton"
-            class="secondary-button"
-        >
-            名前変更
-        </button>
-
-
-        <!-- 時間割削除 -->
-        <button
-            id="deleteScheduleButton"
-            class="danger-button"
-        >
-            削除
-        </button>
-
-    </div>
+</div>
 
 </header>
 
 
-<!-- ==================================================
-     メイン
-================================================== -->
+<main>
 
-<main class="main-container">
+<div class="info">
 
+    <div
+        id="scheduleTitle"
+        class="schedule-title"
+    ></div>
 
-    <!-- ==============================================
-         ナビゲーション
-    =============================================== -->
+    <div class="total-credit">
+        合計単位：
+        <span id="totalCredit">0</span>
+        単位
+    </div>
 
-    <nav class="main-navigation">
+</div>
 
-        <button
-            id="timetableTab"
-            class="navigation-button active"
-        >
-            📚 時間割
-        </button>
 
+<div class="table-wrapper">
 
-        <button
-            id="calendarTab"
-            class="navigation-button"
-        >
-            📅 カレンダー
-        </button>
+<table class="timetable">
 
-    </nav>
+<thead>
 
+<tr>
+    <th class="period">時限</th>
+    <th>月</th>
+    <th>火</th>
+    <th>水</th>
+    <th>木</th>
+    <th>金</th>
+</tr>
 
-    <!-- =================================================
-         時間割画面
-    ================================================= -->
+</thead>
 
-    <section
-        id="timetableView"
-        class="view active"
-    >
+<tbody id="timetableBody"></tbody>
 
-        <!-- 時間割情報 -->
+</table>
 
-        <div class="schedule-info">
-
-            <div>
-
-                <div
-                    id="scheduleTitle"
-                    class="schedule-title"
-                >
-                    時間割
-                </div>
-
-            </div>
-
-
-            <div class="total-credit">
-
-                合計単位：
-
-                <strong
-                    id="totalCredit"
-                >
-                    0
-                </strong>
-
-                単位
-
-            </div>
-
-        </div>
-
-
-        <!-- 時間割 -->
-
-        <div class="table-wrapper">
-
-            <table class="timetable">
-
-                <thead>
-
-                    <tr>
-
-                        <th class="period-column">
-                            時限
-                        </th>
-
-                        <th>
-                            月
-                        </th>
-
-                        <th>
-                            火
-                        </th>
-
-                        <th>
-                            水
-                        </th>
-
-                        <th>
-                            木
-                        </th>
-
-                        <th>
-                            金
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody
-                    id="timetableBody"
-                >
-                    <!--
-                        JavaScriptで
-                        1〜5限を生成
-                    -->
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </section>
-
-
-    <!-- =================================================
-         カレンダー画面
-    ================================================= -->
-
-    <section
-        id="calendarView"
-        class="view"
-    >
-
-        <!-- カレンダーヘッダー -->
-
-        <div class="calendar-header">
-
-            <button
-                id="previousMonthButton"
-                class="calendar-nav-button"
-            >
-                ‹
-            </button>
-
-
-            <h2
-                id="calendarTitle"
-                class="calendar-title"
-            >
-                2026年8月
-            </h2>
-
-
-            <button
-                id="nextMonthButton"
-                class="calendar-nav-button"
-            >
-                ›
-            </button>
-
-        </div>
-
-
-        <!-- 今日へ -->
-
-        <div class="calendar-actions">
-
-            <button
-                id="todayButton"
-                class="secondary-button"
-            >
-                今日
-            </button>
-
-
-            <button
-                id="addEventButton"
-                class="primary-button"
-            >
-                ＋ 予定を追加
-            </button>
-
-        </div>
-
-
-        <!-- カレンダー -->
-
-        <div class="calendar-wrapper">
-
-            <div
-                id="calendar"
-                class="calendar"
-            >
-                <!--
-                    JavaScriptで
-                    カレンダーを生成
-                -->
-            </div>
-
-        </div>
-
-
-        <!-- 選択日の予定 -->
-
-        <div
-            id="selectedDateEvents"
-            class="selected-date-events"
-        >
-
-            <h3
-                id="selectedDateTitle"
-            >
-                予定
-            </h3>
-
-
-            <div
-                id="eventList"
-                class="event-list"
-            >
-                <!--
-                    JavaScriptで
-                    予定を表示
-                -->
-            </div>
-
-        </div>
-
-    </section>
+</div>
 
 </main>
 
 
-<!-- ==================================================
+<!-- =====================================
      授業追加・編集モーダル
-================================================== -->
+===================================== -->
 
 <div
     id="classModal"
-    class="modal-background"
+    class="modal-bg"
 >
 
-    <div class="modal">
+<div class="modal">
 
-        <div class="modal-header">
-
-            <h2 id="classModalTitle">
-                授業を追加
-            </h2>
-
-            <button
-                id="closeClassModalButton"
-                class="close-button"
-            >
-                ×
-            </button>
-
-        </div>
+<h2 id="modalTitle">
+    授業を追加
+</h2>
 
 
-        <!-- 授業名 -->
+<!-- 授業名 -->
 
-        <div class="form-group">
+<div class="form-group">
 
-            <label for="className">
-                授業名
-            </label>
+<label>
+    授業名
+</label>
 
-            <input
-                type="text"
-                id="className"
-                placeholder="例：統計学"
-            >
-
-        </div>
-
-
-        <!-- 教員 -->
-
-        <div class="form-group">
-
-            <label for="teacher">
-                担当教員
-            </label>
-
-            <input
-                type="text"
-                id="teacher"
-                placeholder="例：〇〇先生"
-            >
-
-        </div>
-
-
-        <!-- 単位 -->
-
-        <div class="form-group">
-
-            <label for="credit">
-                単位数
-            </label>
-
-            <input
-                type="number"
-                id="credit"
-                min="0"
-                step="0.5"
-                value="2"
-            >
-
-        </div>
-
-
-        <!-- 曜日・時限 -->
-
-        <div class="form-group">
-
-            <label>
-                曜日・時限
-            </label>
-
-
-            <div
-                id="slotGrid"
-                class="slot-grid"
-            >
-                <!--
-                    JavaScriptで生成
-                -->
-            </div>
-
-
-            <div class="selected-count">
-
-                選択中：
-
-                <strong
-                    id="selectedSlotCount"
-                >
-                    0
-                </strong>
-
-                コマ
-
-            </div>
-
-        </div>
-
-
-        <!-- 色 -->
-
-        <div class="form-group">
-
-            <label>
-                色
-            </label>
-
-
-            <div
-                id="classColorOptions"
-                class="color-options"
-            >
-
-                <button
-                    class="color-option color-1"
-                    data-color="1"
-                ></button>
-
-                <button
-                    class="color-option color-2"
-                    data-color="2"
-                ></button>
-
-                <button
-                    class="color-option color-3"
-                    data-color="3"
-                ></button>
-
-                <button
-                    class="color-option color-4"
-                    data-color="4"
-                ></button>
-
-                <button
-                    class="color-option color-5"
-                    data-color="5"
-                ></button>
-
-                <button
-                    class="color-option color-6"
-                    data-color="6"
-                ></button>
-
-            </div>
-
-        </div>
-
-
-        <!-- ボタン -->
-
-        <div class="modal-buttons">
-
-            <button
-                id="cancelClassButton"
-                class="secondary-button"
-            >
-                キャンセル
-            </button>
-
-
-            <button
-                id="deleteClassButton"
-                class="danger-button"
-            >
-                削除
-            </button>
-
-
-            <button
-                id="saveClassButton"
-                class="primary-button"
-            >
-                保存
-            </button>
-
-        </div>
-
-    </div>
+<input
+    type="text"
+    id="className"
+    placeholder="例：統計学"
+/>
 
 </div>
 
 
-<!-- ==================================================
-     カレンダー予定追加・編集モーダル
-================================================== -->
+<!-- 教員 -->
+
+<div class="form-group">
+
+<label>
+    担当教員（任意）
+</label>
+
+<input
+    type="text"
+    id="teacher"
+    placeholder="例：〇〇先生"
+/>
+
+</div>
+
+
+<!-- 単位 -->
+
+<div class="form-group">
+
+<label>
+    単位数
+</label>
+
+<input
+    type="number"
+    id="credit"
+    min="0"
+    step="0.5"
+    value="2"
+/>
+
+</div>
+
+
+<!-- 曜日・時限 -->
+
+<div class="form-group">
+
+<label>
+    曜日・時限
+</label>
 
 <div
-    id="eventModal"
-    class="modal-background"
->
+    id="slotGrid"
+    class="slot-grid"
+></div>
 
-    <div class="modal">
-
-        <div class="modal-header">
-
-            <h2 id="eventModalTitle">
-                予定を追加
-            </h2>
-
-            <button
-                id="closeEventModalButton"
-                class="close-button"
-            >
-                ×
-            </button>
-
-        </div>
-
-
-        <!-- 日付 -->
-
-        <div class="form-group">
-
-            <label for="eventDate">
-                日付
-            </label>
-
-            <input
-                type="date"
-                id="eventDate"
-            >
-
-        </div>
-
-
-        <!-- タイトル -->
-
-        <div class="form-group">
-
-            <label for="eventTitle">
-                予定
-            </label>
-
-            <input
-                type="text"
-                id="eventTitle"
-                placeholder="例：ゲーム理論の試験"
-            >
-
-        </div>
-
-
-        <!-- 開始時間 -->
-
-        <div class="form-group">
-
-            <label for="eventStartTime">
-                開始
-            </label>
-
-            <input
-                type="time"
-                id="eventStartTime"
-            >
-
-        </div>
-
-
-        <!-- 終了時間 -->
-
-        <div class="form-group">
-
-            <label for="eventEndTime">
-                終了
-            </label>
-
-            <input
-                type="time"
-                id="eventEndTime"
-            >
-
-        </div>
-
-
-        <!-- メモ -->
-
-        <div class="form-group">
-
-            <label for="eventMemo">
-                メモ
-            </label>
-
-            <textarea
-                id="eventMemo"
-                rows="4"
-                placeholder="メモを入力"
-            ></textarea>
-
-        </div>
-
-
-        <!-- ボタン -->
-
-        <div class="modal-buttons">
-
-            <button
-                id="cancelEventButton"
-                class="secondary-button"
-            >
-                キャンセル
-            </button>
-
-
-            <button
-                id="deleteEventButton"
-                class="danger-button"
-            >
-                削除
-            </button>
-
-
-            <button
-                id="saveEventButton"
-                class="primary-button"
-            >
-                保存
-            </button>
-
-        </div>
-
-    </div>
+<div class="selected-count">
+    選択中：
+    <strong id="selectedCount">0</strong>
+    コマ
+</div>
 
 </div>
 
 
-<!-- ==================================================
-     JavaScript
-================================================== -->
+<!-- 色 -->
 
-<!-- データ保存・読み込み -->
-<script
-    src="js/storage.js"
-></script>
+<div class="form-group">
+
+<label>
+    色
+</label>
+
+<div class="color-options">
+
+    <div
+        class="color-option color-1"
+        onclick="selectColor(1)"
+    ></div>
+
+    <div
+        class="color-option color-2"
+        onclick="selectColor(2)"
+    ></div>
+
+    <div
+        class="color-option color-3"
+        onclick="selectColor(3)"
+    ></div>
+
+    <div
+        class="color-option color-4"
+        onclick="selectColor(4)"
+    ></div>
+
+    <div
+        class="color-option color-5"
+        onclick="selectColor(5)"
+    ></div>
+
+    <div
+        class="color-option color-6"
+        onclick="selectColor(6)"
+    ></div>
+
+</div>
+
+</div>
 
 
-<!-- 時間割 -->
-<script
-    src="js/timetable.js"
-></script>
+<div class="modal-buttons">
+
+<button
+    class="secondary"
+    onclick="closeModal()"
+>
+    キャンセル
+</button>
+
+<button
+    id="deleteClassButton"
+    class="danger"
+    onclick="deleteClass()"
+>
+    削除
+</button>
+
+<button
+    class="primary"
+    onclick="saveClass()"
+>
+    保存
+</button>
+
+</div>
+
+</div>
+
+</div>
 
 
-<!-- カレンダー -->
-<script
-    src="js/calendar.js"
-></script>
+<script>
+
+/* =====================================================
+   基本設定
+===================================================== */
+
+const DAYS = ["月", "火", "水", "木", "金"];
+
+const PERIODS = [1, 2, 3, 4, 5];
 
 
-<!-- モーダル -->
-<script
-    src="js/modal.js"
-></script>
+/* =====================================================
+   データ読み込み
+===================================================== */
+
+let data = JSON.parse(
+    localStorage.getItem("timetableAppData")
+);
 
 
-<!-- アプリ全体 -->
-<script
-    src="js/app.js"
-></script>
+/*
+    古いデータがない場合
+*/
 
+if (!data) {
+
+    data = {
+
+        currentSchedule: 0,
+
+        schedules: [
+
+            {
+                name: "2026年度 前期",
+
+                classes: {}
+            }
+
+        ]
+
+    };
+
+    saveData();
+
+}
+
+
+/* =====================================================
+   状態
+===================================================== */
+
+let editingClassId = null;
+
+let selectedColor = 1;
+
+let selectedSlots = [];
+
+
+/* =====================================================
+   保存
+===================================================== */
+
+function saveData() {
+
+    localStorage.setItem(
+        "timetableAppData",
+        JSON.stringify(data)
+    );
+
+}
+
+
+/* =====================================================
+   初期化
+===================================================== */
+
+function init() {
+
+    renderScheduleSelect();
+
+    renderTimetable();
+
+}
+
+
+/* =====================================================
+   現在の時間割
+===================================================== */
+
+function currentSchedule() {
+
+    return data.schedules[
+        data.currentSchedule
+    ];
+
+}
+
+
+/* =====================================================
+   時間割セレクト
+===================================================== */
+
+function renderScheduleSelect() {
+
+    const select =
+        document.getElementById(
+            "scheduleSelect"
+        );
+
+    select.innerHTML = "";
+
+
+    data.schedules.forEach(
+        (schedule, index) => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value = index;
+
+            option.textContent =
+                schedule.name;
+
+            if (
+                index ===
+                data.currentSchedule
+            ) {
+
+                option.selected = true;
+
+            }
+
+            select.appendChild(option);
+
+        }
+    );
+
+
+    select.onchange = function() {
+
+        data.currentSchedule =
+            Number(this.value);
+
+        saveData();
+
+        renderTimetable();
+
+    };
+
+}
+
+
+/* =====================================================
+   時間割描画
+===================================================== */
+
+function renderTimetable() {
+
+    const tbody =
+        document.getElementById(
+            "timetableBody"
+        );
+
+    tbody.innerHTML = "";
+
+
+    const schedule =
+        currentSchedule();
+
+
+    document.getElementById(
+        "scheduleTitle"
+    ).textContent =
+        schedule.name;
+
+
+    PERIODS.forEach(period => {
+
+        const tr =
+            document.createElement("tr");
+
+
+        /* 時限 */
+
+        const periodCell =
+            document.createElement("td");
+
+        periodCell.className =
+            "period";
+
+        periodCell.textContent =
+            period + "限";
+
+        tr.appendChild(periodCell);
+
+
+        /* 月〜金 */
+
+        DAYS.forEach(day => {
+
+            const td =
+                document.createElement("td");
+
+            const key =
+                `${day}${period}`;
+
+
+            const classData =
+                schedule.classes[key];
+
+
+            if (classData) {
+
+                const card =
+                    document.createElement("div");
+
+                card.className =
+                    `class-card color-${classData.color}`;
+
+
+                card.innerHTML = `
+
+                    <div class="class-name">
+                        ${escapeHtml(
+                            classData.name
+                        )}
+                    </div>
+
+                    ${
+                        classData.teacher
+                        ?
+                        `
+                        <div class="teacher">
+                            ${escapeHtml(
+                                classData.teacher
+                            )}
+                        </div>
+                        `
+                        :
+                        ""
+                    }
+
+                    <div class="credit">
+                        ${classData.credit}単位
+                    </div>
+
+                `;
+
+
+                /*
+                    授業をタップすると編集
+                */
+
+                card.onclick = function() {
+
+                    openEditModal(
+                        classData.id
+                    );
+
+                };
+
+
+                td.appendChild(card);
+
+            }
+            else {
+
+                /*
+                    空きコマ
+                    ↓
+                    ここをタップすると
+                    そのコマが最初から選択された状態
+                */
+
+                const empty =
+                    document.createElement(
+                        "div"
+                    );
+
+                empty.className =
+                    "empty-slot";
+
+                empty.textContent = "+";
+
+
+                empty.onclick =
+                    function() {
+
+                        openAddModal(
+                            [key]
+                        );
+
+                    };
+
+
+                td.appendChild(empty);
+
+            }
+
+
+            tr.appendChild(td);
+
+        });
+
+
+        tbody.appendChild(tr);
+
+    });
+
+
+    updateTotalCredit();
+
+}
+
+
+/* =====================================================
+   授業追加モーダル
+===================================================== */
+
+function openAddModal(initialSlots = []) {
+
+    editingClassId = null;
+
+    selectedSlots =
+        [...initialSlots];
+
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "授業を追加";
+
+
+    document.getElementById(
+        "className"
+    ).value = "";
+
+
+    document.getElementById(
+        "teacher"
+    ).value = "";
+
+
+    document.getElementById(
+        "credit"
+    ).value = 2;
+
+
+    selectedColor = 1;
+
+
+    document.getElementById(
+        "deleteClassButton"
+    ).style.display = "none";
+
+
+    renderSlotGrid();
+
+    updateColorSelection();
+
+
+    document.getElementById(
+        "classModal"
+    ).classList.add("active");
+
+}
+
+
+/* =====================================================
+   授業編集モーダル
+===================================================== */
+
+function openEditModal(classId) {
+
+    const schedule =
+        currentSchedule();
+
+
+    /*
+        IDから授業を探す
+    */
+
+    let classData = null;
+
+    let classKeys = [];
+
+
+    Object.keys(
+        schedule.classes
+    ).forEach(key => {
+
+        const c =
+            schedule.classes[key];
+
+        if (c.id === classId) {
+
+            classData = c;
+
+            classKeys.push(key);
+
+        }
+
+    });
+
+
+    if (!classData) {
+
+        return;
+
+    }
+
+
+    editingClassId =
+        classId;
+
+
+    selectedSlots =
+        [...classKeys];
+
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "授業を編集";
+
+
+    document.getElementById(
+        "className"
+    ).value =
+        classData.name;
+
+
+    document.getElementById(
+        "teacher"
+    ).value =
+        classData.teacher || "";
+
+
+    document.getElementById(
+        "credit"
+    ).value =
+        classData.credit;
+
+
+    selectedColor =
+        classData.color || 1;
+
+
+    document.getElementById(
+        "deleteClassButton"
+    ).style.display =
+        "block";
+
+
+    renderSlotGrid();
+
+    updateColorSelection();
+
+
+    document.getElementById(
+        "classModal"
+    ).classList.add("active");
+
+}
+
+
+/* =====================================================
+   曜日・時限グリッド
+===================================================== */
+
+function renderSlotGrid() {
+
+    const grid =
+        document.getElementById(
+            "slotGrid"
+        );
+
+    grid.innerHTML = "";
+
+
+    DAYS.forEach(day => {
+
+        PERIODS.forEach(period => {
+
+            const key =
+                `${day}${period}`;
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                "slot";
+
+
+            if (
+                selectedSlots.includes(key)
+            ) {
+
+                div.classList.add(
+                    "selected"
+                );
+
+            }
+
+
+            div.innerHTML = `
+
+                <div class="slot-day">
+                    ${day}
+                </div>
+
+                <div class="slot-period">
+                    ${period}限
+                </div>
+
+            `;
+
+
+            div.onclick = function() {
+
+                toggleSlot(key);
+
+            };
+
+
+            grid.appendChild(div);
+
+        });
+
+    });
+
+
+    updateSelectedCount();
+
+}
+
+
+/* =====================================================
+   コマ選択
+===================================================== */
+
+function toggleSlot(key) {
+
+    const index =
+        selectedSlots.indexOf(key);
+
+
+    if (index === -1) {
+
+        selectedSlots.push(key);
+
+    }
+    else {
+
+        selectedSlots.splice(
+            index,
+            1
+        );
+
+    }
+
+
+    renderSlotGrid();
+
+}
+
+
+/* =====================================================
+   選択コマ数
+===================================================== */
+
+function updateSelectedCount() {
+
+    document.getElementById(
+        "selectedCount"
+    ).textContent =
+        selectedSlots.length;
+
+}
+
+
+/* =====================================================
+   色選択
+===================================================== */
+
+function selectColor(color) {
+
+    selectedColor = color;
+
+    updateColorSelection();
+
+}
+
+
+function updateColorSelection() {
+
+    document
+        .querySelectorAll(".color-option")
+        .forEach(
+            (element, index) => {
+
+                element.classList.toggle(
+                    "selected",
+                    index + 1 ===
+                    selectedColor
+                );
+
+            }
+        );
+
+}
+
+
+/* =====================================================
+   授業保存
+===================================================== */
+
+function saveClass() {
+
+    const name =
+        document.getElementById(
+            "className"
+        ).value.trim();
+
+
+    const teacher =
+        document.getElementById(
+            "teacher"
+        ).value.trim();
+
+
+    const credit =
+        Number(
+            document.getElementById(
+                "credit"
+            ).value
+        );
+
+
+    /* 入力チェック */
+
+    if (!name) {
+
+        alert(
+            "授業名を入力してください。"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        isNaN(credit) ||
+        credit < 0
+    ) {
+
+        alert(
+            "単位数を正しく入力してください。"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        selectedSlots.length === 0
+    ) {
+
+        alert(
+            "曜日・時限を1つ以上選択してください。"
+        );
+
+        return;
+
+    }
+
+
+    const schedule =
+        currentSchedule();
+
+
+    /* =================================================
+       編集の場合
+    ================================================= */
+
+    if (editingClassId !== null) {
+
+        /*
+            以前の同じ授業のコマを
+            いったん全部削除
+        */
+
+        Object.keys(
+            schedule.classes
+        ).forEach(key => {
+
+            if (
+                schedule.classes[key].id ===
+                editingClassId
+            ) {
+
+                delete schedule.classes[key];
+
+            }
+
+        });
+
+    }
+
+
+    /* =================================================
+       重複チェック
+    ================================================= */
+
+    const conflicts = [];
+
+
+    selectedSlots.forEach(key => {
+
+        if (schedule.classes[key]) {
+
+            /*
+                編集中の自分自身ならOK
+            */
+
+            if (
+                schedule.classes[key].id !==
+                editingClassId
+            ) {
+
+                conflicts.push(key);
+
+            }
+
+        }
+
+    });
+
+
+    if (conflicts.length > 0) {
+
+        const names =
+            conflicts.map(key => {
+
+                const c =
+                    schedule.classes[key];
+
+                return `${key}：${c.name}`;
+
+            });
+
+
+        const message =
+            "以下のコマには既に授業があります。\n\n" +
+            names.join("\n") +
+            "\n\n上書きしますか？";
+
+
+        if (!confirm(message)) {
+
+            /*
+                編集前のデータを
+                消してしまわないように
+                ここでは処理を止める
+            */
+
+            return;
+
+        }
+
+
+        /*
+            上書き
+        */
+
+        conflicts.forEach(key => {
+
+            delete schedule.classes[key];
+
+        });
+
+    }
+
+
+    /* =================================================
+       授業ID
+    ================================================= */
+
+    const classId =
+        editingClassId !== null
+        ?
+        editingClassId
+        :
+        createId();
+
+
+    /* =================================================
+       複数コマに同じ授業を登録
+    ================================================= */
+
+    selectedSlots.forEach(key => {
+
+        schedule.classes[key] = {
+
+            id: classId,
+
+            name: name,
+
+            teacher: teacher,
+
+            credit: credit,
+
+            color: selectedColor
+
+        };
+
+    });
+
+
+    saveData();
+
+    closeModal();
+
+    renderTimetable();
+
+}
+
+
+/* =====================================================
+   授業削除
+===================================================== */
+
+function deleteClass() {
+
+    if (
+        editingClassId === null
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !confirm(
+            "この授業をすべての登録コマから削除しますか？"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    const schedule =
+        currentSchedule();
+
+
+    Object.keys(
+        schedule.classes
+    ).forEach(key => {
+
+        if (
+            schedule.classes[key].id ===
+            editingClassId
+        ) {
+
+            delete schedule.classes[key];
+
+        }
+
+    });
+
+
+    saveData();
+
+    closeModal();
+
+    renderTimetable();
+
+}
+
+
+/* =====================================================
+   モーダルを閉じる
+===================================================== */
+
+function closeModal() {
+
+    document.getElementById(
+        "classModal"
+    ).classList.remove("active");
+
+
+    editingClassId = null;
+
+    selectedSlots = [];
+
+}
+
+
+/* =====================================================
+   時間割追加
+===================================================== */
+
+function addSchedule() {
+
+    const name =
+        prompt(
+            "新しい時間割の名前を入力してください。",
+            `時間割${data.schedules.length + 1}`
+        );
+
+
+    if (!name) {
+
+        return;
+
+    }
+
+
+    data.schedules.push({
+
+        name: name,
+
+        classes: {}
+
+    });
+
+
+    data.currentSchedule =
+        data.schedules.length - 1;
+
+
+    saveData();
+
+    renderScheduleSelect();
+
+    renderTimetable();
+
+}
+
+
+/* =====================================================
+   時間割名前変更
+===================================================== */
+
+function renameSchedule() {
+
+    const schedule =
+        currentSchedule();
+
+
+    const name =
+        prompt(
+            "時間割の名前を入力してください。",
+            schedule.name
+        );
+
+
+    if (!name) {
+
+        return;
+
+    }
+
+
+    schedule.name = name;
+
+
+    saveData();
+
+    renderScheduleSelect();
+
+    renderTimetable();
+
+}
+
+
+/* =====================================================
+   時間割削除
+===================================================== */
+
+function deleteSchedule() {
+
+    if (
+        data.schedules.length <= 1
+    ) {
+
+        alert(
+            "時間割は最低1つ必要です。"
+        );
+
+        return;
+
+    }
+
+
+    const schedule =
+        currentSchedule();
+
+
+    if (
+        !confirm(
+            `「${schedule.name}」を削除しますか？`
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    data.schedules.splice(
+        data.currentSchedule,
+        1
+    );
+
+
+    data.currentSchedule =
+        Math.max(
+            0,
+            data.currentSchedule - 1
+        );
+
+
+    saveData();
+
+    renderScheduleSelect();
+
+    renderTimetable();
+
+}
+
+
+/* =====================================================
+   単位数計算
+===================================================== */
+
+function updateTotalCredit() {
+
+    const schedule =
+        currentSchedule();
+
+
+    /*
+        同じ授業が月1・水1にあっても
+        1つの授業として単位を1回だけ加算する
+    */
+
+    const counted =
+        new Set();
+
+
+    let total = 0;
+
+
+    Object.values(
+        schedule.classes
+    ).forEach(classData => {
+
+        if (
+            !counted.has(classData.id)
+        ) {
+
+            counted.add(
+                classData.id
+            );
+
+            total +=
+                Number(
+                    classData.credit
+                ) || 0;
+
+        }
+
+    });
+
+
+    document.getElementById(
+        "totalCredit"
+    ).textContent =
+        total;
+
+}
+
+
+/* =====================================================
+   ID生成
+===================================================== */
+
+function createId() {
+
+    return (
+        Date.now().toString(36) +
+        Math.random()
+            .toString(36)
+            .substring(2)
+    );
+
+}
+
+
+/* =====================================================
+   HTMLエスケープ
+===================================================== */
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* =====================================================
+   起動
+===================================================== */
+
+init();
+
+</script>
 
 </body>
 </html>
