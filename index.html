@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- スマホ対応 -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>時間割・カレンダー</title>
+
+    <!-- CSS -->
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+</head>
+
+
+<body>
+
+<!-- ==================================================
+     ヘッダー
+================================================== -->
+
+<header class="app-header">
+
+    <div class="header-inner">
+
+        <h1>
+            📚 時間割
+        </h1>
+
+        <!-- 時間割切り替え -->
+        <select
+            id="scheduleSelect"
+            class="schedule-select"
+        >
+        </select>
+
+
+        <!-- 授業追加 -->
+        <button
+            id="addClassButton"
+            class="primary-button"
+        >
+            ＋ 授業を追加
+        </button>
+
+
+        <!-- 時間割追加 -->
+        <button
+            id="addScheduleButton"
+            class="secondary-button"
+        >
+            ＋ 時間割
+        </button>
+
+
+        <!-- 名前変更 -->
+        <button
+            id="renameScheduleButton"
+            class="secondary-button"
+        >
+            名前変更
+        </button>
+
+
+        <!-- 時間割削除 -->
+        <button
+            id="deleteScheduleButton"
+            class="danger-button"
+        >
+            削除
+        </button>
+
+    </div>
+
+</header>
+
+
+<!-- ==================================================
+     メイン
+================================================== -->
+
+<main class="main-container">
+
+
+    <!-- ==============================================
+         ナビゲーション
+    =============================================== -->
+
+    <nav class="main-navigation">
+
+        <button
+            id="timetableTab"
+            class="navigation-button active"
+        >
+            📚 時間割
+        </button>
+
+
+        <button
+            id="calendarTab"
+            class="navigation-button"
+        >
+            📅 カレンダー
+        </button>
+
+    </nav>
+
+
+    <!-- =================================================
+         時間割画面
+    ================================================= -->
+
+    <section
+        id="timetableView"
+        class="view active"
+    >
+
+        <!-- 時間割情報 -->
+
+        <div class="schedule-info">
+
+            <div>
+
+                <div
+                    id="scheduleTitle"
+                    class="schedule-title"
+                >
+                    時間割
+                </div>
+
+            </div>
+
+
+            <div class="total-credit">
+
+                合計単位：
+
+                <strong
+                    id="totalCredit"
+                >
+                    0
+                </strong>
+
+                単位
+
+            </div>
+
+        </div>
+
+
+        <!-- 時間割 -->
+
+        <div class="table-wrapper">
+
+            <table class="timetable">
+
+                <thead>
+
+                    <tr>
+
+                        <th class="period-column">
+                            時限
+                        </th>
+
+                        <th>
+                            月
+                        </th>
+
+                        <th>
+                            火
+                        </th>
+
+                        <th>
+                            水
+                        </th>
+
+                        <th>
+                            木
+                        </th>
+
+                        <th>
+                            金
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="timetableBody"
+                >
+                    <!--
+                        JavaScriptで
+                        1〜5限を生成
+                    -->
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         カレンダー画面
+    ================================================= -->
+
+    <section
+        id="calendarView"
+        class="view"
+    >
+
+        <!-- カレンダーヘッダー -->
+
+        <div class="calendar-header">
+
+            <button
+                id="previousMonthButton"
+                class="calendar-nav-button"
+            >
+                ‹
+            </button>
+
+
+            <h2
+                id="calendarTitle"
+                class="calendar-title"
+            >
+                2026年8月
+            </h2>
+
+
+            <button
+                id="nextMonthButton"
+                class="calendar-nav-button"
+            >
+                ›
+            </button>
+
+        </div>
+
+
+        <!-- 今日へ -->
+
+        <div class="calendar-actions">
+
+            <button
+                id="todayButton"
+                class="secondary-button"
+            >
+                今日
+            </button>
+
+
+            <button
+                id="addEventButton"
+                class="primary-button"
+            >
+                ＋ 予定を追加
+            </button>
+
+        </div>
+
+
+        <!-- カレンダー -->
+
+        <div class="calendar-wrapper">
+
+            <div
+                id="calendar"
+                class="calendar"
+            >
+                <!--
+                    JavaScriptで
+                    カレンダーを生成
+                -->
+            </div>
+
+        </div>
+
+
+        <!-- 選択日の予定 -->
+
+        <div
+            id="selectedDateEvents"
+            class="selected-date-events"
+        >
+
+            <h3
+                id="selectedDateTitle"
+            >
+                予定
+            </h3>
+
+
+            <div
+                id="eventList"
+                class="event-list"
+            >
+                <!--
+                    JavaScriptで
+                    予定を表示
+                -->
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<!-- ==================================================
+     授業追加・編集モーダル
+================================================== -->
+
+<div
+    id="classModal"
+    class="modal-background"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2 id="classModalTitle">
+                授業を追加
+            </h2>
+
+            <button
+                id="closeClassModalButton"
+                class="close-button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- 授業名 -->
+
+        <div class="form-group">
+
+            <label for="className">
+                授業名
+            </label>
+
+            <input
+                type="text"
+                id="className"
+                placeholder="例：統計学"
+            >
+
+        </div>
+
+
+        <!-- 教員 -->
+
+        <div class="form-group">
+
+            <label for="teacher">
+                担当教員
+            </label>
+
+            <input
+                type="text"
+                id="teacher"
+                placeholder="例：〇〇先生"
+            >
+
+        </div>
+
+
+        <!-- 単位 -->
+
+        <div class="form-group">
+
+            <label for="credit">
+                単位数
+            </label>
+
+            <input
+                type="number"
+                id="credit"
+                min="0"
+                step="0.5"
+                value="2"
+            >
+
+        </div>
+
+
+        <!-- 曜日・時限 -->
+
+        <div class="form-group">
+
+            <label>
+                曜日・時限
+            </label>
+
+
+            <div
+                id="slotGrid"
+                class="slot-grid"
+            >
+                <!--
+                    JavaScriptで生成
+                -->
+            </div>
+
+
+            <div class="selected-count">
+
+                選択中：
+
+                <strong
+                    id="selectedSlotCount"
+                >
+                    0
+                </strong>
+
+                コマ
+
+            </div>
+
+        </div>
+
+
+        <!-- 色 -->
+
+        <div class="form-group">
+
+            <label>
+                色
+            </label>
+
+
+            <div
+                id="classColorOptions"
+                class="color-options"
+            >
+
+                <button
+                    class="color-option color-1"
+                    data-color="1"
+                ></button>
+
+                <button
+                    class="color-option color-2"
+                    data-color="2"
+                ></button>
+
+                <button
+                    class="color-option color-3"
+                    data-color="3"
+                ></button>
+
+                <button
+                    class="color-option color-4"
+                    data-color="4"
+                ></button>
+
+                <button
+                    class="color-option color-5"
+                    data-color="5"
+                ></button>
+
+                <button
+                    class="color-option color-6"
+                    data-color="6"
+                ></button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ボタン -->
+
+        <div class="modal-buttons">
+
+            <button
+                id="cancelClassButton"
+                class="secondary-button"
+            >
+                キャンセル
+            </button>
+
+
+            <button
+                id="deleteClassButton"
+                class="danger-button"
+            >
+                削除
+            </button>
+
+
+            <button
+                id="saveClassButton"
+                class="primary-button"
+            >
+                保存
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     カレンダー予定追加・編集モーダル
+================================================== -->
+
+<div
+    id="eventModal"
+    class="modal-background"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <h2 id="eventModalTitle">
+                予定を追加
+            </h2>
+
+            <button
+                id="closeEventModalButton"
+                class="close-button"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <!-- 日付 -->
+
+        <div class="form-group">
+
+            <label for="eventDate">
+                日付
+            </label>
+
+            <input
+                type="date"
+                id="eventDate"
+            >
+
+        </div>
+
+
+        <!-- タイトル -->
+
+        <div class="form-group">
+
+            <label for="eventTitle">
+                予定
+            </label>
+
+            <input
+                type="text"
+                id="eventTitle"
+                placeholder="例：ゲーム理論の試験"
+            >
+
+        </div>
+
+
+        <!-- 開始時間 -->
+
+        <div class="form-group">
+
+            <label for="eventStartTime">
+                開始
+            </label>
+
+            <input
+                type="time"
+                id="eventStartTime"
+            >
+
+        </div>
+
+
+        <!-- 終了時間 -->
+
+        <div class="form-group">
+
+            <label for="eventEndTime">
+                終了
+            </label>
+
+            <input
+                type="time"
+                id="eventEndTime"
+            >
+
+        </div>
+
+
+        <!-- メモ -->
+
+        <div class="form-group">
+
+            <label for="eventMemo">
+                メモ
+            </label>
+
+            <textarea
+                id="eventMemo"
+                rows="4"
+                placeholder="メモを入力"
+            ></textarea>
+
+        </div>
+
+
+        <!-- ボタン -->
+
+        <div class="modal-buttons">
+
+            <button
+                id="cancelEventButton"
+                class="secondary-button"
+            >
+                キャンセル
+            </button>
+
+
+            <button
+                id="deleteEventButton"
+                class="danger-button"
+            >
+                削除
+            </button>
+
+
+            <button
+                id="saveEventButton"
+                class="primary-button"
+            >
+                保存
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     JavaScript
+================================================== -->
+
+<!-- データ保存・読み込み -->
+<script
+    src="js/storage.js"
+></script>
+
+
+<!-- 時間割 -->
+<script
+    src="js/timetable.js"
+></script>
+
+
+<!-- カレンダー -->
+<script
+    src="js/calendar.js"
+></script>
+
+
+<!-- モーダル -->
+<script
+    src="js/modal.js"
+></script>
+
+
+<!-- アプリ全体 -->
+<script
+    src="js/app.js"
+></script>
+
+
+</body>
+</html>
